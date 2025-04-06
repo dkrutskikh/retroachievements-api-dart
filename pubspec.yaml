@@ -1,0 +1,22 @@
+name: retroachievements_api
+description: A well-tested library that lets you get achievement, user, and game data from RetroAchievements.
+version: 0.0.0
+homepage: https://api-docs.retroachievements.org/
+repository: https://github.com/dkrutskikh/retroachievements-api-dart
+issue_tracker: https://github.com/dkrutskikh/retroachievements-api-dart/issues
+# documentation
+
+topics:
+  - api
+  - achievements
+  - retroachievements
+
+environment:
+  sdk: ^3.7.0
+
+#dependencies:
+  # path: ^1.8.0
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.25.0
