@@ -1,0 +1,102 @@
+name: "Analyze the package"
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "example/**"
+      - "lib/**"
+      - "test/**"
+      - ".github/workflows/package_analyze.yaml"
+      - "analysis_options.yaml"
+      - "pubspec.yaml"
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+    paths:
+      - "example/**"
+      - "lib/**"
+      - "test/**"
+      - ".github/workflows/package_analyze.yaml"
+      - "analysis_options.yaml"
+      - "pubspec.yaml"
+
+permissions:
+  checks: write
+  contents: read
+  statuses: write
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Stable Dart
+        uses: dart-lang/setup-dart@v1.7.1
+        with:
+          sdk: "stable"
+
+      - name: Checkout
+        uses: actions/checkout@v4.2.0
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run dependency validator
+        run: |
+          dart pub global activate dependency_validator
+          dart pub global run dependency_validator:dependency_validator
+
+      - name: Analyze project
+        run: dart analyze --fatal-warnings --fatal-infos .
+
+      - name: Verify formatting
+        run: dart format --set-exit-if-changed .
+
+      - name: Compute the package score on pub.dev site
+        uses: axel-op/dart-package-analyzer@v3
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  testing:
+    needs: analysis
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Install Stable Dart
+        uses: dart-lang/setup-dart@v1.7.1
+        with:
+          sdk: "stable"
+
+      - name: Checkout
+        uses: actions/checkout@v4.2.0
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run tests
+        if: success()
+        run: |
+          dart test --coverage=coverage --reporter=github --file-reporter="json:reports/tests.json"
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v2.0.0
+        if: success() || failure() # run this step even if previous step failed
+        with:
+          name: Tests result
+          path: reports/tests.json
+          reporter: dart-json
+          list-suites: "all"
+          list-tests: "all"
+          max-annotations: 16
+          fail-on-error: true
+          token: ${{ secrets.GITHUB_TOKEN }}
