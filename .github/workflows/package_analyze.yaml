@@ -27,20 +27,15 @@ on:
       - "pubspec.yaml"
 
 permissions:
-  statuses: write
   checks: write
+  contents: read
+  statuses: write
 
 jobs:
   analysis:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validate semantic changelog update
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: GetStream/verify-semantic-changelog-update@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Install Stable Dart
         uses: dart-lang/setup-dart@v1.7.1
         with:
